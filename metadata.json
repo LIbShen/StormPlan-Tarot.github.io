@@ -1,0 +1,7 @@
+{
+  "name": "Lumina Tarot",
+  "description": "An immersive, gesture-controlled Tarot reading experience powered by Gemini AI and MediaPipe.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
