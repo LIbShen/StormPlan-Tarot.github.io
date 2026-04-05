@@ -6,6 +6,35 @@ import { CARD_BACK_IMAGE, TAROT_DECK, TRANSLATIONS } from './constants';
 import { DeckCard, GameState, Language, DrawEffect, BackgroundMode } from './types';
 import gsap from 'gsap';
 
+const getCryptoRandomUint32 = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const values = new Uint32Array(1);
+    crypto.getRandomValues(values);
+    return values[0];
+  }
+  return Math.floor(Math.random() * 0x100000000);
+};
+
+const randomInt = (maxExclusive: number) => {
+  if (maxExclusive <= 0) return 0;
+  const maxUint = 0x100000000;
+  const limit = maxUint - (maxUint % maxExclusive);
+  let value = getCryptoRandomUint32();
+  while (value >= limit) {
+    value = getCryptoRandomUint32();
+  }
+  return value % maxExclusive;
+};
+
+const shuffleDeck = (source: DeckCard[]) => {
+  const newDeck = [...source];
+  for (let i = newDeck.length - 1; i > 0; i--) {
+    const j = randomInt(i + 1);
+    [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+  }
+  return newDeck;
+};
+
 // --- ICONS ---
 const GearIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-6 h-6 ${className}`}>
@@ -78,7 +107,7 @@ export default function App() {
     const rawDeck: DeckCard[] = TAROT_DECK.map((card, i) => ({
       ...card,
       uniqueId: `deck-${i}`,
-      isReversed: Math.random() > 0.5 
+      isReversed: randomInt(2) === 1
     }));
     setDeck(rawDeck);
   }, []);
@@ -89,12 +118,7 @@ export default function App() {
     setGameState('shuffling');
     setTimeout(() => {
       setDeck(prevDeck => {
-        const newDeck = [...prevDeck];
-        for (let i = newDeck.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
-        }
-        return newDeck;
+        return shuffleDeck(prevDeck);
       });
       setGameState('drawing');
       setDrawStep(0);
@@ -104,7 +128,7 @@ export default function App() {
   const handleDrawCard = () => {
     if (selectedCards.length >= 3) return;
     const availableCards = deck.filter(c => !selectedCards.find(s => s.uniqueId === c.uniqueId));
-    const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+    const randomCard = availableCards[randomInt(availableCards.length)];
     const newSelection = [...selectedCards, randomCard];
     setSelectedCards(newSelection);
     if (newSelection.length === 3) {
@@ -121,12 +145,7 @@ export default function App() {
     setGameState('shuffling');
     setTimeout(() => {
         setDeck(prevDeck => {
-            const newDeck = [...prevDeck];
-            for (let i = newDeck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
-            }
-            return newDeck;
+            return shuffleDeck(prevDeck);
         });
         setGameState('drawing');
         setDrawStep(0);
